@@ -2,26 +2,47 @@
 <html lang="en">
 
 <head>
-
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
-    <title>Control Button</title>
-
-    <!-- Your own CSS -->
-    <link type="text/css" rel="stylesheet" href="./index.css" media="all">
-
-    <!-- Required: uibuilder client library -->
+    <title>Control Group 1</title>
+    <link type="text/css" rel="stylesheet" href="./index.css">
     <script defer src="../uibuilder/uibuilder.iife.min.js"></script>
-    <!-- Optional: Your custom JavaScript -->
     <script defer src="./index.js"></script>
-
 </head>
 
-<body class="uib">
-
-    <button id="roll-button" onclick="fnSendToNR()">Button</button>
-
+<body>
+    <div id="button-container">
+        <div>
+            <div class="dynamic-text-1">Loading...</div>
+            <button id="roll-button-1" onclick="toggleButtonState(1)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+        <div>
+            <div class="dynamic-text-2">Loading...</div>
+            <button id="roll-button-2" onclick="toggleButtonState(2)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+        <div>
+            <div class="dynamic-text-3">Loading...</div>
+            <button id="roll-button-3" onclick="toggleButtonState(3)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+        <div>
+            <div class="dynamic-text-4">Loading...</div>
+            <button id="roll-button-4" onclick="toggleButtonState(4)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+        <div>
+            <div class="dynamic-text-5">Loading...</div>
+            <button id="roll-button-5" onclick="toggleButtonState(5)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+        <div>
+            <div class="dynamic-text-6">Loading...</div>
+            <button id="roll-button-6" onclick="toggleButtonState(6)">Deactivated</button>
+            <div class="separator"></div>
+        </div>
+    </div>
 </body>
 
 </html>

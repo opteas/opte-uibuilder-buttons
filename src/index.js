@@ -3,127 +3,110 @@
 /* globals uibuilder */
 // @ts-nocheck
 
-/** Minimalist code for uibuilder and Node-RED */
-'use strict'
+/** Dynamic code for handling multiple buttons with uibuilder and Node-RED */
+'use strict';
 
-const number = "1"; // button number
+// Function to toggle and send the button state to Node-RED
+function toggleButtonState(buttonIndex) {
+    // Get the current state from localStorage
+    let bool = localStorage.getItem(`buttonState-${buttonIndex}`) === 'true';
 
-// Send a message back to Node-RED
-let bool;
-
-window.fnSendToNR = function fnSendToNR() {
-    // get the current value of bool from localStorage
-    bool = localStorage.getItem('buttonState' + number);
-
-    // if bool is null or undefined, set it to false
-    if (!bool) {
-        bool = false;
-    } else {
-        // if bool is a string, convert it to a boolean
-        bool = bool === 'true';
-    }
-
-    // toggle the value of bool
+    // Toggle the state
     bool = !bool;
 
-    // save the new value of bool in localStorage
-    localStorage.setItem('buttonState' + number, bool);
+    // Save the new state to localStorage
+    localStorage.setItem(`buttonState-${buttonIndex}`, bool);
 
-    // send the new value of bool as the payload
+    // Create an array of all button states
+    const buttonIds = [1, 2, 3, 4, 5, 6];
+    const buttonStates = buttonIds.map(id => ({
+        button: id,
+        payload: localStorage.getItem(`buttonState-${id}`) === 'true',
+        dynamicText: document.querySelector(`.dynamic-text-${id}`)?.textContent || "Loading...",
+    }));
+
+    // Send the updated states as an array to Node-RED
     uibuilder.send({
-        topic: 'button' + number,
-        payload: bool,
-        source: bool ? "user" : "user"  // Send "user" only if the button is being deactivated
+        topic: `button${buttonIndex}`,
+        payload: buttonStates,
+        source: "user",
     });
-};
 
-// run this function when the document is loaded
+    // Update the button UI
+    updateButtonUI(buttonIndex, bool);
+}
+
+// Function to update the button UI based on its state
+function updateButtonUI(buttonIndex, bool) {
+    const button = document.getElementById(`roll-button-${buttonIndex}`);
+    const dynamicTextElement = document.querySelector(`.dynamic-text-${buttonIndex}`);
+
+    if (button) {
+        // Update button text
+        button.textContent = bool ? "Activated" : "Deactivated";
+
+        // Update button color
+        button.style.backgroundColor = bool ? "rgb(66, 154, 67)" : "rgb(224, 180, 0)";
+        button.style.color = "black"; // Text color
+    }
+
+    if (dynamicTextElement) {
+        // Optionally update dynamic text (if provided)
+        dynamicTextElement.textContent = bool ? "Active" : "Inactive";
+    }
+}
+
+// Function to handle incoming messages from Node-RED
+function handleIncomingMessage(msg) {
+    // Ensure payload is an array (to handle multiple buttons)
+    if (Array.isArray(msg.payload)) {
+        msg.payload.forEach((buttonData, index) => {
+            const buttonIndex = index + 1; // Map array index (0-based) to button ID (1-based)
+            const bool = buttonData.payload; // Button state
+            const dynamicText = buttonData.dynamicText; // Optional dynamic text
+
+            // Save the state to localStorage
+            localStorage.setItem(`buttonState-${buttonIndex}`, bool);
+
+            // Update the button UI
+            updateButtonUI(buttonIndex, bool);
+
+            // Update the dynamic text field if available
+            if (dynamicText !== undefined) {
+                const dynamicTextElement = document.querySelector(`.dynamic-text-${buttonIndex}`);
+                if (dynamicTextElement) {
+                    dynamicTextElement.textContent = dynamicText;
+                }
+            }
+        });
+    } else {
+        console.error("Invalid payload structure from Node-RED:", msg.payload);
+    }
+}
+
+// Initialize all buttons dynamically
 window.onload = function () {
-    // Start up uibuilder - see the docs for the optional parameters
+    // Start uibuilder
     uibuilder.start();
 
-    // Get the current value of bool from localStorage
-    bool = localStorage.getItem('buttonState' + number);
+    // Define the button IDs (e.g., 1 to 6 for 6 buttons)
+    const buttonIds = [1, 2, 3, 4, 5, 6];
 
-    // If bool is null or undefined, set it to false
-    if (!bool) {
-        bool = false;
-    } else {
-        // If bool is a string, convert it to a boolean
-        bool = bool === 'true';
-    }
+    // Initialize each button state from localStorage
+    buttonIds.forEach(buttonIndex => {
+        const bool = localStorage.getItem(`buttonState-${buttonIndex}`) === 'true';
+        updateButtonUI(buttonIndex, bool);
 
-    // Update the button text based on the value of bool
-    let buttonText;
-    if (bool) {
-        buttonText = "Activated";
-    } else {
-        buttonText = "Deactivated";
-    }
-    document.getElementById('roll-button').textContent = buttonText;
-
-    // Update the button color based on the value of bool
-    let buttonColor;
-    if (bool) {
-        buttonColor = "rgb(66, 154, 67)";
-    } else {
-        buttonColor = "rgb(224, 180, 0)";
-    }
-    document.getElementById('roll-button').style.backgroundColor = buttonColor;
-
-    // Update the button text color based on the value of bool
-    let buttonTextColor;
-    if (bool) {
-        buttonTextColor = "black";
-    } else {
-        buttonTextColor = "black";
-    }
-    document.getElementById('roll-button').style.color = buttonTextColor;
+        // Set initial dynamic text
+        const dynamicTextElement = document.querySelector(`.dynamic-text-${buttonIndex}`);
+        if (dynamicTextElement) {
+            dynamicTextElement.textContent = "Loading...";
+        }
+    });
 
     // Listen for incoming messages from Node-RED
     uibuilder.onChange('msg', function (msg) {
-        // console.info('[indexjs:uibuilder.onChange] msg received from Node-RED server:', msg);
-
-        // Update the value of bool based on the value of msg.payload
-        bool = msg.payload;
-
-        // Save the new value of bool in localStorage
-        localStorage.setItem('buttonState' + number, bool);
-
-        // Update the button text based on the value of bool
-        let buttonText;
-        if (bool) {
-            buttonText = "Activated";
-        } else {
-            buttonText = "Deactivated";
-        }
-        document.getElementById('roll-button').textContent = buttonText;
-
-        // Update the button color based on the value of bool
-        let buttonColor;
-        if (bool) {
-            buttonColor = "rgb(66, 154, 67)";
-        } else {
-            buttonColor = "rgb(224, 180, 0)";
-        }
-        document.getElementById('roll-button').style.backgroundColor = buttonColor;
-
-        // Update the button text color based on the value of bool
-        let buttonTextColor;
-        if (bool) {
-            buttonTextColor = "black";
-        } else {
-            buttonTextColor = "black";
-        }
-        document.getElementById('roll-button').style.color = buttonTextColor;
-
-        // If you want to send the source back to Node-RED (though it might create a loop)
-        // if (!bool) {
-        //     uibuilder.send({
-        //         topic: 'button' + number + '_source',
-        //         payload: bool,
-        //         source: msg.source  // Send "alarm" if the button is being deactivated by alarm
-        //     });
-        // }
+        // Handle the incoming message
+        handleIncomingMessage(msg);
     });
 };
